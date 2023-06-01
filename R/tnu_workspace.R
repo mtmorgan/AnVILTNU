@@ -10,12 +10,17 @@ BIOC_TNU <- new.env(parent = emptyenv())
 #' @param x NULL (get the existing value) or character(1) workspace
 #'     namespace and name, formatted as `NAMESPACE/NAME`.
 #'
+#' @param is_google_cloud logical(1) is the workspace on the google
+#'     cloud? If so, ensure that the environment variable
+#'     `WORKSPACE_BUCKET` is set, as this is used by
+#'     terra-notebook-utils during authentication.
+#'
 #' @details `tnu_workspace()` with no argument checks to see if the
 #'     workspace namespace and name have been assigned through a
 #'     previous call to `tnu_workspace()`, or are defined by the
-#'     package options `BiocTNU.WORKSPACE_NAMESPACE`,
-#'     `BiocTNU.WORKSPACE_NAME` (set via
-#'     `options(BiocTNU.WORKSPACE_NAME = ...)`), or by the system
+#'     package options `AnVILTNU.WORKSPACE_NAMESPACE`,
+#'     `AnVILTNU.WORKSPACE_NAME` (set via
+#'     `options(AnVILTNU.WORKSPACE_NAME = ...)`), or by the system
 #'     environment variables `WORKSPACE_NAMESPACE`,
 #'     `WORKSPACE_NAME`. Calls to `tnu_workspace()` have precedence
 #'     over package options, which have precedence over system
@@ -28,13 +33,13 @@ BIOC_TNU <- new.env(parent = emptyenv())
 #'
 #' @export
 tnu_workspace <-
-    function(x = NULL)
+    function(x = NULL, is_google_cloud = TRUE)
 {
     stopifnot(is.null(x) || is_tnu_workspace(x))
     if (is.null(x)) {
         workspace <- tnu_workspace_get()
     } else {
-        workspace <- tnu_workspace_set(x)
+        workspace <- tnu_workspace_set(x, is_google_cloud)
     }
     workspace
 }
@@ -62,9 +67,9 @@ tnu_workspace_get <-
     ## read workspace namespace and name from the environment, then
     ## options
     namespace <- Sys.getenv("WORKSPACE_NAMESPACE", NA_character_)
-    namespace <- getOption("BiocTNU.WORKSPACE_NAMESPACE", namespace)
+    namespace <- getOption("AnVILTNU.WORKSPACE_NAMESPACE", namespace)
     name <- Sys.getenv("WORKSPACE_NAME", NA_character_)
-    name <- getOption("BiocTNU.WORKSPACE_NAME", name)
+    name <- getOption("AnVILTNU.WORKSPACE_NAME", name)
 
     if (is.na(name) || is.na(namespace)) {
         txt <- paste0(
@@ -81,9 +86,15 @@ tnu_workspace_get <-
 }
 
 tnu_workspace_set <-
-    function(x)
+    function(x, is_google_cloud)
 {
     BIOC_TNU[["tnu_workspace"]] <- x
+
+    if (is_google_cloud)
+        Sys.setenv("WORKSPACE_BUCKET" = AnVIL::avbucket(
+            tnu_workspace_namespace(),
+            tnu_workspace_name()
+        ))
 
     ## return the workspace namespace/name
     BIOC_TNU[["tnu_workspace"]]

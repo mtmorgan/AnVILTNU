@@ -1,8 +1,8 @@
-# BiocTNU
+# AnVILTNU
 
 The [DataBiosphere][] project includes a vision
 
-![schema](https://raw.githubusercontent.com/vjcitn/BiocTNU/main/databiosfig.jpg)
+![schema](https://raw.githubusercontent.com/vjcitn/AnVILTNU/main/databiosfig.jpg)
 
 of which AnVIL/Terra forms a part.
 
